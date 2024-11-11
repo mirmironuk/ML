@@ -16,7 +16,7 @@ import shutil
 
 def open_folder_in_explorer():
     global minecraft_directory
-    
+
     os.startfile(minecraft_directory)
 def check_option_file():
     global minecraft_directory
@@ -31,7 +31,8 @@ def check_option_file():
             "",  # Ширина роздільної здатності
             "",  # Висота роздільної здатності
             "False",  # Режим демо-версії
-            ""  # Директорія Minecraft
+            "",  # Директорія Minecraft
+            "False" #Консоль
         ]
         #{jvm_arguments}\n{exec_path}\n{default_exec_path}\n{custom_resolution}\n{resolution_width}\n{resolution_height}\n{demo_mode}\n{mine_directory}
         # Записуємо значення за замовчуванням у файл
@@ -65,7 +66,6 @@ def check_option_file():
         with open(option_file_path, 'w') as file:
             for option in default_options:
                 file.write(f"{option}\n")
-
 def first_start():
     if not os.path.exists(minecraft_launcher_lib.utils.get_minecraft_directory()):
         os.makedirs(minecraft_launcher_lib.utils.get_minecraft_directory())
@@ -82,6 +82,15 @@ def first_start():
     
 def start_game(name):
     global minecraft_directory, selected_option, options, minecraft_command, haver
+
+    with open("data/option.txt", 'r') as file:
+         opter = file.read().splitlines()
+    if opter[7]:
+        minecraft_directory=opter[7]
+    minecraft_directory_version = os.path.join(minecraft_directory, "versions")
+    folders = [f for f in os.listdir(minecraft_directory_version) if os.path.isdir(os.path.join(minecraft_directory_version, f))]
+    haver = selected_option.get() in folders
+
     if not haver:
         dowloader()
     options = {
@@ -114,14 +123,19 @@ def start_game(name):
     if nointver:
         options["gameDirectory"] = os.path.join(os.path.join(minecraft_directory, "versions"),selected_option.get())
         print(options["gameDirectory"],"АААААА")
+    else:
+        options["gameDirectory"] = minecraft_directory
     print(selected_option.get(), minecraft_directory, options)
     minecraft_command = minecraft_launcher_lib.command.get_minecraft_command(selected_option.get(), minecraft_directory, options)
     print("Старт")
-    #subprocess.run(minecraft_command, creationflags=subprocess.CREATE_NO_WINDOW)
-    subprocess.run(minecraft_command)
+    if not ast.literal_eval(opter[8]):
+        subprocess.run(minecraft_command, creationflags=subprocess.CREATE_NO_WINDOW, cwd=options["gameDirectory"])
+    else:
+        subprocess.run(minecraft_command, cwd=options["gameDirectory"])
     print("Фінал")
 def dowloader():
     global minecraft_directory, selected_option, playbtn
+    print("Тест")
     info=Label(tk, text="Привіт, світ!", bg='white')
     info.place(x=50, y=305)
     playbtn.configure(state=DISABLED)
@@ -145,10 +159,11 @@ def dowloader():
     }
     with open("data/option.txt", 'r') as file:
          opter = file.read().splitlines()
+    print(f"-- {opter[7]} {opter}")
     if opter[7]:
         minecraft_directory=opter[7]
-    else:
-        minecraft_launcher_lib.install.install_minecraft_version(selected_option.get(), minecraft_directory, callback=callback)
+    #else: Було до глобальной переоботки но не памятаю начо
+    minecraft_launcher_lib.install.install_minecraft_version(selected_option.get(), minecraft_directory, callback=callback)
     info.destroy()
     playbtn.configure(state=NORMAL)
     sel_ver_game()
@@ -271,6 +286,11 @@ def ownermenu():
         opter = file.read().splitlines()
     if opter[7]:
         minecraft_directory = opter[7]
+    
+    if not os.path.exists(minecraft_directory):
+        os.mkdir(minecraft_directory)
+    if not os.path.exists(os.path.join(minecraft_directory, "versions")):
+        os.mkdir(os.path.join(minecraft_directory, "versions"))
     try:
         allversget=minecraft_launcher_lib.utils.get_available_versions(minecraft_directory)
         versall=[]
@@ -287,6 +307,13 @@ def ownermenu():
                 versall.append(i["id"])
         minecraft_directory_version = os.path.join(minecraft_directory, "versions")
         versaller = [f for f in os.listdir(minecraft_directory_version) if os.path.isdir(os.path.join(minecraft_directory_version, f))]
+        print(versall)
+        print(versaller)
+        new_list_test=[]
+        for item in versall+versaller:
+            if item not in new_list_test:
+                new_list_test.append(item)
+        versall=new_list_test
         for ir in versaller:
             versall.remove(ir)
             versall.insert(0,ir)
@@ -387,7 +414,13 @@ def castomversion():
         def set_max(new_max: int):
             global current_max
             current_max = new_max
-
+        
+        with open("data/option.txt", 'r') as file:
+            opter = file.read().splitlines()
+        if opter[7]:
+            minecraft_directory=opter[7]
+        else:
+            minecraft_directory=minecraft_launcher_lib.utils.get_minecraft_directory()
         def dowlondermine():
             minecraft_launcher_lib.forge.install_forge_version(minecraft_launcher_lib.forge.find_forge_version(selectedcast_option.get()), minecraft_directory, callback=callback)
         callback = {
@@ -395,12 +428,6 @@ def castomversion():
             "setProgress": set_progress,
             "setMax": set_max
         }
-        with open("data/option.txt", 'r') as file:
-            opter = file.read().splitlines()
-        if opter[7]:
-            minecraft_directory=opter[7]
-        else:
-            minecraft_directory=minecraft_launcher_lib.utils.get_minecraft_directory()
         print("старт установки")
         background_thread = threading.Thread(target=dowlondermine)
         background_thread.start()
@@ -482,7 +509,8 @@ def apply_settings():
     resolution_height = resolution_height_var.get()
     demo_mode = demo_mode_var.get()
     mine_directory = mine_directory_var.get()
-    texting = f"{jvm_arguments}\n{exec_path}\n{default_exec_path}\n{custom_resolution}\n{resolution_width}\n{resolution_height}\n{demo_mode}\n{mine_directory}\n"
+    console_mode = Console_mode_var.get()
+    texting = f"{jvm_arguments}\n{exec_path}\n{default_exec_path}\n{custom_resolution}\n{resolution_width}\n{resolution_height}\n{demo_mode}\n{mine_directory}\n{console_mode}\n"
 
     with open("data/option.txt", 'w') as file:
         file.write(texting)
@@ -494,13 +522,14 @@ def apply_settings():
     veralf= f"{relise}\n{snap}\n{beta}\n{alfa}\n"
     with open("data/type_version.txt", 'w') as file:
         file.write(veralf)
+    seting_window.destroy()
 def seting():
     global seting_window, seting_frame, canvas_seting, scrollbar_seting
     global jvm_arguments_var, exec_path_var, default_exec_path_var
     global custom_resolution_var, resolution_width_var, resolution_height_var
     global game_directory_var, demo_mode_var, mine_directory_var
     global seting_background_image, seting_resized_image, seting_photo
-    global Alfa_mode_var, Beta_mode_var, Snapshot_mode_var, relise_mode_var
+    global Alfa_mode_var, Beta_mode_var, Snapshot_mode_var, relise_mode_var, Console_mode_var
     if not seting_window or not seting_window.winfo_exists():
         seting_window = Toplevel()
         seting_window.title("Settings")
@@ -597,6 +626,11 @@ def seting():
         Alfa_mode_var.set(False)  # За замовчуванням вимкнуто
         Alfa_mode_checkbox = Checkbutton(seting_frame, text="Альфа", variable=Alfa_mode_var)
         Alfa_mode_checkbox.pack()
+
+        Console_mode_var = BooleanVar()
+        Console_mode_var.set(False)  # За замовчуванням вимкнуто
+        Console_mode_checkbox = Checkbutton(seting_frame, text="Консоль", variable=Console_mode_var)
+        Console_mode_checkbox.pack()
         
         save_button = Button(seting_window, text="Зберегти і вийти", command=apply_settings)
         save_button.place(x=280, y=250)
@@ -612,6 +646,7 @@ def seting():
         resolution_height_var.set(opter[5])
         demo_mode_var.set(ast.literal_eval(opter[6]))
         mine_directory_var.set(opter[7])
+        Console_mode_var.set(opter[8])
 
         with open("data/type_version.txt", 'r') as file:
             opver = file.read().splitlines()
