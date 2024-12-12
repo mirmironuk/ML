@@ -13,6 +13,7 @@ import string
 import urllib.request
 import winshell
 import shutil
+import time
 
 def open_folder_in_explorer():
     global minecraft_directory
@@ -81,8 +82,21 @@ def first_start():
             os.makedirs(os.path.join(minecraft_directory,"versions"))
     
 def start_game(name):
-    global minecraft_directory, selected_option, options, minecraft_command, haver
+    global minecraft_directory, selected_option, options, minecraft_command, haver, playbtn
+    def button_reload():
+        playbtn.configure(state=DISABLED)
+        info = Label(tk, text="3", bg='white')
+        info.place(x=50, y=305)
+        time.sleep(1)
+        info.config(text="2")
+        time.sleep(1)
+        info.config(text="1")
+        time.sleep(1)
+        info.destroy()
+        playbtn.configure(state=NORMAL)
 
+    gamerstarter = threading.Thread(target=button_reload)
+    gamerstarter.start()
     with open("data/option.txt", 'r') as file:
          opter = file.read().splitlines()
     if opter[7]:
@@ -348,7 +362,7 @@ def ownermenu():
     playbtn = Button(tk, text="Запустити гру", font=("Arial", 32), width=15, height=1, command=lambda: startergumero())
     playbtn.place(x=50, y=345)
 
-    starterbtn = Button(tk, text="Стартер",bg="yellow", font=("Arial", 16), width=15, height=1, command=lambda: start_game(name))
+    starterbtn = Button(tk, text="Стартер",bg="yellow", font=("Arial", 16), width=15, height=1, command=lambda: startergumero())
     starterbtn.place(x=50, y=5)
 
     verplusbtn = Button(tk, text="Кастом версії", font=("Arial", 16), width=15, height=1, command=lambda: castomversion())
@@ -662,6 +676,5 @@ def startergumero():
     gamerstarter.start()
 #if os.path.exists("images"):
 ownermenu()
-
 
 tk.mainloop()
