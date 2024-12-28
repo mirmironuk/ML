@@ -274,15 +274,15 @@ def nameader(event=None):
         redactor_menu.bind("<<ComboboxSelected>>", radact_sell)
         redactor_menu.place(x=60, y=50)
 
-        canvname.create_text(200, 25, text="Редагувати ник", font=("Arial", 20), fill="black")
+        canvname.create_text(200, 25, text="Редагувати нік", font=("Arial", 20), fill="black")
         
         text_field = Entry(canvname, font=("Arial", 18))
         text_field.place(x=75, y=175)
 
-        canvname.create_text(200, 155, text="Ник", font=("Arial", 20), fill="black")
+        canvname.create_text(200, 155, text="Нік", font=("Arial", 20), fill="black")
         
-        button = Button(canvname, text="Сохранити НИК", font=("Arial", 35), command=saveder)  
-        button.place(x=10, y=300)
+        button = Button(canvname, text="Зберегти НІК", font=("Arial", 35), command=saveder)
+        button.place(x=40, y=300)
 
         radact_sell()
 def ownermenu():
@@ -345,7 +345,7 @@ def ownermenu():
 
     fon.create_image(0, 0, anchor=NW, image=transparent_photo2)  # Відображення прозорого прямокутника на canvas
 
-    infname = Label(tk, text="Ваш ник", font=("Helvetica", 32), fg='#FFD700', bg='white', bd=0)
+    infname = Label(tk, text="Ваш нік", font=("Helvetica", 32), fg='#FFD700', bg='white', bd=0)
     infname.place(x=160,y=60)
 
     namenik()
