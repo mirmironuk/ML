@@ -4,16 +4,13 @@ import PIL.Image
 from PIL import ImageTk
 import minecraft_launcher_lib
 import subprocess
-import sys
 import os
 import ast
 import threading
 import random
 import string
-import urllib.request
-import winshell
-import shutil
 import time
+import re
 
 def open_folder_in_explorer():
     global minecraft_directory
@@ -95,6 +92,18 @@ def start_game(name):
         info.destroy()
         playbtn.configure(state=NORMAL)
 
+    def is_valid_minecraft_version(version: str) -> bool:
+        # Регулярний вираз для версій Minecraft
+        pattern = re.compile(
+            r"^(?:"
+            r"(?:\d+\.\d+(?:\.\d+)?(?:-pre\d+)?)|"  # Релізні версії (наприклад, 1.20, 1.20.1, 1.20-pre2)
+            r"(?:alpha \d+\.\d+\.\d+)|"  # Альфа-версії (наприклад, alpha 1.2.3)
+            r"(?:beta \d+\.\d+\.\d+)|"  # Бета-версії (наприклад, beta 1.3.4)
+            r"(?:\d+w\d+[a-z]?)"  # Снапшоти (наприклад, 23w45a)
+            r")$"
+        )
+        return bool(pattern.match(version))
+
     gamerstarter = threading.Thread(target=button_reload)
     gamerstarter.start()
     with open("data/option.txt", 'r') as file:
@@ -130,15 +139,22 @@ def start_game(name):
     if opter[7]:
         minecraft_directory=opter[7]
     nointver=True
-    for i in minecraft_launcher_lib.utils.get_available_versions(os.path.join(minecraft_directory, "versions")):
-        if selected_option.get() == i["id"]:
-            print(selected_option.get() == i["id"])
-            nointver=False
-    if nointver:
-        options["gameDirectory"] = os.path.join(os.path.join(minecraft_directory, "versions"),selected_option.get())
-        print(options["gameDirectory"],"АААААА")
-    else:
-        options["gameDirectory"] = minecraft_directory
+    try:
+        for i in minecraft_launcher_lib.utils.get_available_versions(os.path.join(minecraft_directory, "versions")):
+            if selected_option.get() == i["id"]:
+                print(selected_option.get() == i["id"])
+                nointver=False
+        if nointver:
+            options["gameDirectory"] = os.path.join(os.path.join(minecraft_directory, "versions"),selected_option.get())
+            print(options["gameDirectory"],"АААААА")
+        else:
+            options["gameDirectory"] = minecraft_directory
+    except Exception as e:
+        if is_valid_minecraft_version(selected_option.get()):
+            options["gameDirectory"] = minecraft_directory
+        else:
+            options["gameDirectory"] = os.path.join(os.path.join(minecraft_directory, "versions"),
+                                                    selected_option.get())
     print(selected_option.get(), minecraft_directory, options)
     minecraft_command = minecraft_launcher_lib.command.get_minecraft_command(selected_option.get(), minecraft_directory, options)
     print("Старт")
